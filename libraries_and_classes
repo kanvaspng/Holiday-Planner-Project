@@ -1,0 +1,19 @@
+1. Libraries / Packages
+streamlit → Library for building interactive web apps for data visualization and dashboards.
+
+pandas → Library for data manipulation and analysis (working with tables, CSVs, Excel, etc.).
+
+folium → Library for creating interactive maps in Python using Leaflet.js.
+
+streamlit_folium → A helper library to embed Folium maps inside Streamlit apps.
+
+branca → A Python library used by Folium for building HTML/JS components in maps.
+
+2. Specific components/classes
+DivIcon (from folium) → A type of icon for markers on Folium maps (allows HTML inside markers).
+
+element (from branca) → Base module for creating custom HTML/JS elements in Folium maps.
+
+Template (from branca.element) → Lets you create custom HTML templates for maps or widgets.
+
+MacroElement (from branca.element) → Base class for custom map elements (like templates, markers, or overlays).
