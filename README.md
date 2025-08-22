@@ -1,4 +1,4 @@
-## What’s inside
+## What’s inside the .json file
 - `meta` (city, check-in/out)
 - `accommodations` (Hotels.com + Airbnb, with lat/lon, price, rating)
 - `food_and_drink` (restaurants + bars from Google Places)
