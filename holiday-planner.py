@@ -1,23 +1,31 @@
+# =======================================================================================================================================================================================
+#  IMPORTS & DATA LOADING
+# =======================================================================================================================================================================================
+
 import streamlit as st
-
-st.title("🌍 Holiday Planner")
-st.subheader("Plan your dream holiday in Playa de las Americas!")
-st.write("Use this website as your planning tool to explore the best weather, restaurants, and nightlife the area has to offer.")
-
-
-
 import json
-import streamlit as st
 import pandas as pd
 
+st.set_page_config(
+    page_title="Holiday Planner",  # This is the browser tab name
+    page_icon="🏖️", 
+    layout="wide"
+)
 
 # Load JSON data
 with open("app_data.json", "r") as f:
     data = json.load(f)
 
-import streamlit as st
+# =======================================================================================================================================================================================
+#  SIDEBAR NAVIGATION
+# =======================================================================================================================================================================================
 
-page = st.sidebar.radio("Navigate", ["Homepage", "Flights", "Weather", "Accommodation", "Restaurants", "Nightlife"])
+
+page = st.sidebar.radio("Navigate", ["Homepage", "Flights", "Weather", "Accommodation", "Restaurants", "Nightlife", "AI Travel Assistant"])
+
+# =======================================================================================================================================================================================
+#  WEATHER PAGE
+# =======================================================================================================================================================================================
 
 if page == "Weather":
     # Page header
@@ -51,7 +59,7 @@ if page == "Weather":
 
     # Week selector
     week = st.selectbox("Select a week:", ["Choose a week", "Week 1", "Week 2", "Week 3", "Week 4", "Week 5"])
-
+    # Display weather cards in rows of 3 columns
     if week != "Choose a week":
         week_num = int(week.split()[-1])
         start_day = (week_num - 1) * 7 + 1
@@ -79,9 +87,11 @@ if page == "Weather":
                     </div>
                     """, unsafe_allow_html=True)
 
-elif page == "Flights":
-    import streamlit as st
+# =======================================================================================================================================================================================
+#  FLIGHTS PAGE
+# =======================================================================================================================================================================================
 
+elif page == "Flights":
     st.title("✈️ Flights to Tenerife")
     st.write("Find average prices and flight times from major UK airports to Tenerife South.")
 
@@ -106,22 +116,25 @@ elif page == "Flights":
                 st.markdown(f"- **Average Price (September):** £{info['avg_price']}")
                 st.markdown(f"- **Average Flight Time:** {info['avg_time']}")
                 st.markdown("---")
+# =======================================================================================================================================================================================
+#  ACCOMMODATION PAGE
+# =======================================================================================================================================================================================
 
 elif page == "Accommodation":
-    import streamlit as st
-    import pandas as pd
     import folium
     from streamlit_folium import st_folium
 
     st.title("🏨 Accommodation")
     st.write("Browse hotels and Airbnbs with prices, ratings, and locations.")
 
+    #Retrieve accommodation data from JSON
     accommodations = data.get("accommodations", [])
 
     # Ensure accommodations is a list
     if isinstance(accommodations, dict):
         accommodations = [accommodations]
 
+    # Handle empty dataset
     if not accommodations:
         st.info("No accommodation data available.")
     else:
@@ -189,34 +202,43 @@ elif page == "Accommodation":
         else:
             st.info("No Airbnb location data available.")
 
+# =======================================================================================================================================================================================
+#  RESTAURANTS PAGE
+# =======================================================================================================================================================================================
 
 elif page == "Restaurants":
     st.header("Restaurants")
     st.image("restaurant.jpg", caption="Delicious food", use_container_width=True)
 
+    # Retrieve restaurant and bar data from JSON
     restaurants = data.get("food_and_drink", [])
     if isinstance(restaurants, dict):
         restaurants = [restaurants]
 
     if restaurants:
+        # Convert to dataframe
         df_restaurants = pd.DataFrame(restaurants)
-        if "distance_km" in df_restaurants.columns:
-            df_restaurants = df_restaurants.sort_values("distance_km")
         
         st.dataframe(df_restaurants[['title', 'rating']], width=1000, height=400)
-
-        # Map
+        
+        # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        #  MAP OF RESTAURANTS AND BARS
+        # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         import folium
         from folium import DivIcon
         from streamlit_folium import st_folium
         from branca.element import Template, MacroElement
 
         df_food = df_restaurants.copy()
+        #'R' for restaurant 'B' for bar
         df_food['type'] = df_food['category'].apply(lambda x: 'R' if x == 'restaurant' else 'B')
+        # Centre map on average coordinates
         map_center = [df_food['lat'].mean(), df_food['lon'].mean()]
         m = folium.Map(location=map_center, zoom_start=14)
+        # Set marker colours
         type_colors = {'R': 'red', 'B': 'blue'}
 
+        # Add custom markers for each location
         for _, row in df_food.iterrows():
             color = type_colors[row['type']]
             folium.Marker(
@@ -235,7 +257,7 @@ elif page == "Restaurants":
                 """)
             ).add_to(m)
 
-        # Legend
+        # Legend for Restaurant and Bar
         template = """
         {% macro html(this, kwargs) %}
         <div style="
@@ -259,16 +281,16 @@ elif page == "Restaurants":
         macro._template = Template(template)
         m.get_root().add_child(macro)
 
+        # Display on streamlit
         st_folium(m, width=700, height=500)
 
     else:
         st.info("No restaurant data available.")
 
+# =======================================================================================================================================================================================
+#  NIGHTLIFE PAGE
+# =======================================================================================================================================================================================
 elif page == "Nightlife":
-    import pandas as pd
-    import folium
-    from streamlit_folium import st_folium
-    import streamlit as st
 
     # Page title
     st.title("Nightlife in Playa de las Americas")
@@ -315,11 +337,15 @@ elif page == "Nightlife":
 
     st.subheader("Map of Nightlife Locations")
     st_folium(m, width=700, height=500)
-
+    
+# =======================================================================================================================================================================================
+#  HOMEPAGE
+# =======================================================================================================================================================================================
 elif page == "Homepage":
     st.set_page_config(page_title="Travel Guide", page_icon="🏖️", layout="wide")
-
+    st.title("🌍 Holiday Planner")
     st.title("🏖️ Welcome to Your Travel Guide")
+    st.write("Use this website as your planning tool to explore the best weather, restaurants, and nightlife the area has to offer.")
     st.markdown("""
     Explore flights, weather, accommodation, restaurants, and nightlife to plan your perfect trip!
     """)
@@ -347,7 +373,7 @@ elif page == "Homepage":
         if st.button("🎉 Nightlife"):
             st.session_state["page"] = "Nightlife"
 
-    # Optional: Quick Tips Section
+    #Quick Tips Section
     st.markdown("---")
     st.subheader("Quick Tips")
     st.markdown("""
@@ -356,39 +382,72 @@ elif page == "Homepage":
     - Explore maps and plan your routes efficiently.  
     """)
 
+# =======================================================================================================================================================================================
+#  AI ASSISTANT PAGE
+# =======================================================================================================================================================================================
+elif page == "AI Travel Assistant":
     import streamlit as st
-    import requests
+    from huggingface_hub import InferenceClient
 
-    st.set_page_config(page_title="Free LLM Chat", page_icon="🤖")
-    st.title("🤖 Free LLM Chat")
+    st.header("🤖 AI Travel Assistant")
+    st.caption("Ask me general things like: 'best week for sunshine', 'quick 2-day itinerary', 'cheap UK airport options'.")
 
-    # Hugging Face API
-    API_URL = "https://api-inference.huggingface.co/models/gpt2"  # small free model
-    API_KEY = "YOUR_HUGGINGFACE_API_KEY"  # replace with your token
-    headers = {"Authorization": f"Bearer {API_KEY}"}
+    # Hugging Face token (inline)
+    HF_API_KEY = "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"
 
-    # Store chat history
-    if "history" not in st.session_state:
-        st.session_state.history = []
+    # Model
+    MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.3"
+    client = InferenceClient(model=MODEL_ID, token=HF_API_KEY)
+
+    # Initialize chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
 
     # User input
-    user_input = st.text_input("You:", key="input")
+    user_input = st.text_input("Type your question:", key="user_input")
 
+    # Auto-submit when pressing Enter
     if user_input:
-        st.session_state.history.append(f"You: {user_input}")
-        
-        # Send request to Hugging Face
-        response = requests.post(API_URL, headers=headers, json={"inputs": user_input})
-        try:
-            bot_reply = response.json()[0]["generated_text"]
-        except:
-            bot_reply = "Sorry, I couldn't process that."
-        
-        st.session_state.history.append(f"Bot: {bot_reply}")
+        with st.spinner("Thinking..."):
+            try:
+                # Append user message to history
+                st.session_state.chat_history.append({"role": "user", "content": user_input})
+
+                # Prepare messages
+                messages = [{"role": "system", "content": (
+                    "You are a concise, friendly trip-planning assistant for Playa de las Américas, Tenerife. "
+                    "Prefer practical tips. If you’re unsure or need exact prices/times, say so. "
+                    "Offer short itineraries and clear recommendations."
+                )}] + st.session_state.chat_history
+
+                # Query model
+                response = client.chat.completions.create(
+                    messages=messages,
+                    max_tokens=200,
+                    temperature=0.7,
+                )
+
+                # Get assistant reply
+                reply = response.choices[0].message.content
+
+                # Append assistant reply to history
+                st.session_state.chat_history.append({"role": "assistant", "content": reply})
+
+
+            except Exception as e:
+                st.error(f"LLM error: {e}")
 
     # Display chat history
-    for msg in st.session_state.history:
-        st.write(msg)
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "user":
+            st.markdown(f"**You:** {msg['content']}")
+        else:
+            st.markdown(f"**🤖 Assistant:** {msg['content']}")
+
+
+
+
+
 
 
 
